@@ -22,3 +22,15 @@ def is_allowed_target(host: str, extra_allowlist: List[str]) -> bool:
     try:
         resolved = socket.gethostbyname(host)
         ip_obj = ipaddress.ip_address(resolved)
+        return any(ip_obj in net for net in ALLOWED_NETWORKS)
+    except OSError:
+        return False
+
+
+def inspect_tls(host: str, port: int, timeout: float = 3.0) -> Optional[Dict]:
+    ctx = ssl.create_default_context()
+    try:
+        with socket.create_connection((host, port), timeout=timeout) as sock:
+            with ctx.wrap_socket(sock, server_hostname=host) as ssock:
+                cert = ssock.getpeercert()
+                cipher = ssock.cipher()
