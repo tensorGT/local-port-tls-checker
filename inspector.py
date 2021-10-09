@@ -34,3 +34,15 @@ def inspect_tls(host: str, port: int, timeout: float = 3.0) -> Optional[Dict]:
             with ctx.wrap_socket(sock, server_hostname=host) as ssock:
                 cert = ssock.getpeercert()
                 cipher = ssock.cipher()
+                proto = ssock.version()
+                warnings: List[str] = []
+                if proto in ("SSLv2", "SSLv3", "TLSv1", "TLSv1.1"):
+                    warnings.append("weak TLS version: %s" % proto)
+                not_after = cert.get("notAfter", "")
+                if not_after:
+                    exp = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z")
+                    days_left = (exp - datetime.utcnow()).days
+                    if days_left < 30:
+                        warnings.append("cert expiring soon (%d days)" % days_left)
+                return {
+                    "protocol": proto,
