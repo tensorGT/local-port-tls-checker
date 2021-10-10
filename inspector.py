@@ -46,3 +46,16 @@ def inspect_tls(host: str, port: int, timeout: float = 3.0) -> Optional[Dict]:
                         warnings.append("cert expiring soon (%d days)" % days_left)
                 return {
                     "protocol": proto,
+                    "cipher": cipher[0] if cipher else None,
+                    "subject": dict(x[0] for x in cert.get("subject", ())),
+                    "not_after": not_after,
+                    "warnings": warnings,
+                }
+    except ssl.SSLError as err:
+        return {"tls_error": str(err)}
+    except OSError:
+        return None
+
+
+async def scan_port(host: str, port: int, timeout: float = 1.5, check_tls: bool = True) -> Dict:
+    result: Dict = {"port": port, "open": False}
