@@ -59,3 +59,15 @@ def inspect_tls(host: str, port: int, timeout: float = 3.0) -> Optional[Dict]:
 
 async def scan_port(host: str, port: int, timeout: float = 1.5, check_tls: bool = True) -> Dict:
     result: Dict = {"port": port, "open": False}
+    try:
+        reader, writer = await asyncio.wait_for(asyncio.open_connection(host, port), timeout=timeout)
+        result["open"] = True
+        try:
+            banner_bytes = await asyncio.wait_for(reader.read(512), timeout=0.6)
+            if banner_bytes:
+                result["banner"] = banner_bytes.decode("utf-8", errors="replace").strip()
+        except asyncio.TimeoutError:
+            pass
+        writer.close()
+        try:
+            await writer.wait_closed()
