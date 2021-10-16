@@ -71,3 +71,15 @@ async def scan_port(host: str, port: int, timeout: float = 1.5, check_tls: bool 
         writer.close()
         try:
             await writer.wait_closed()
+        except Exception:
+            pass
+    except (asyncio.TimeoutError, OSError):
+        return result
+
+    if check_tls and port in (443, 8443, 465, 993, 995):
+        tls_info = await asyncio.to_thread(inspect_tls, host, port, timeout)
+        if tls_info:
+            result["tls"] = tls_info
+
+    return result
+
