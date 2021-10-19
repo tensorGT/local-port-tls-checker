@@ -83,3 +83,15 @@ async def scan_port(host: str, port: int, timeout: float = 1.5, check_tls: bool 
 
     return result
 
+
+async def run_audit(host: str, ports: List[int], allowlist: List[str]) -> Dict:
+    if not is_allowed_target(host, allowlist):
+        raise PermissionError("blocked! target '%s' is not in local/lab allowlist" % host)
+
+    tasks = [scan_port(host, p) for p in ports]
+    port_results = await asyncio.gather(*tasks)
+    open_ports = [r for r in port_results if r["open"]]
+    return {
+        "target": host,
+        "scanned_ports": len(ports),
+        "open_ports": open_ports,
