@@ -95,3 +95,15 @@ async def run_audit(host: str, ports: List[int], allowlist: List[str]) -> Dict:
         "target": host,
         "scanned_ports": len(ports),
         "open_ports": open_ports,
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="safe local/lab port and tls inspector")
+    parser.add_argument("host", help="target host (must be localhost or private lab ip)")
+    parser.add_argument("--ports", default="22,80,443,5432,8000,8080,8443", help="comma separated ports")
+    parser.add_argument("--allow", action="append", default=[], help="extra explicit allowed hostname")
+    parser.add_argument("--out", default="tls_findings.json")
+    args = parser.parse_args()
+
+    port_list = [int(p.strip()) for p in args.ports.split(",") if p.strip()]
