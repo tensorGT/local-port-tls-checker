@@ -107,3 +107,16 @@ def main() -> None:
     args = parser.parse_args()
 
     port_list = [int(p.strip()) for p in args.ports.split(",") if p.strip()]
+    try:
+        report = asyncio.run(run_audit(args.host, port_list, args.allow))
+    except PermissionError as err:
+        print("security guard:", err)
+        return
+
+    with open(args.out, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2)
+    print("saved findings to %s (%d open ports)" % (args.out, len(report["open_ports"])))
+
+
+if __name__ == "__main__":
+    main()

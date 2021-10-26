@@ -8,3 +8,5 @@ playing with `socket`, `asyncio`, and `ssl` in python for inspect open ports, se
 
 ## usage
 ```bash
+python inspector.py 127.0.0.1 --ports 80,443,8000,8443 --out findings.json
+```
